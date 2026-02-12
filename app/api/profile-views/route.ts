@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
           }
         }
       }
-    }).catch((error) => {
+    }).catch((error: any) => {
       console.error("[profile-views] Database error:", error)
       return []
     })
