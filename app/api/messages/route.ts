@@ -101,7 +101,7 @@ export async function GET(req: Request) {
 
       // Группируем по диалогам
       const dialogues = new Map()
-      messages.forEach((msg) => {
+      messages.forEach((msg: any) => {
         const otherUserId = msg.senderId === session.user.id ? msg.receiverId : msg.senderId
         if (!dialogues.has(otherUserId)) {
           dialogues.set(otherUserId, {
