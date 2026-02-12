@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 
     // Интересы (40 баллов)
     maxScore += 40
-    const commonInterests = myProfile.interests.filter(i => 
+    const commonInterests = myProfile.interests.filter((i: string) => 
       targetProfile.interests.includes(i)
     )
     score += (commonInterests.length / Math.max(myProfile.interests.length, targetProfile.interests.length || 1)) * 40
