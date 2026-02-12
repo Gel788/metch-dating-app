@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     // Проверить Premium
     const premium = await prisma.premium.findUnique({
       where: { userId }
-    }).catch(err => {
+    }).catch((err: any) => {
       console.error("[profile-views] Premium check error:", err)
       return null
     })
