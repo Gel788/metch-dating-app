@@ -1,0 +1,427 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile             Profile?
+  sentMessages        Message[]       @relation("SentMessages")
+  receivedMessages    Message[]       @relation("ReceivedMessages")
+  givenLikes          Like[]          @relation("GivenLikes")
+  receivedLikes       Like[]          @relation("ReceivedLikes")
+  sentGifts           Gift[]          @relation("SentGifts")
+  receivedGifts       Gift[]          @relation("ReceivedGifts")
+  premium             Premium?
+  videoCallsInitiated VideoCall[]     @relation("InitiatedCalls")
+  videoCallsReceived  VideoCall[]     @relation("ReceivedCalls")
+  advertisements      Advertisement[]
+
+  // Новые функции
+  swipesMade           Swipe[]       @relation("SwipeFrom")
+  swipesReceived       Swipe[]       @relation("SwipeTo")
+  profileViews         ProfileView[] @relation("Viewer")
+  profileViewsReceived ProfileView[] @relation("Viewed")
+  favorites            Favorite[]    @relation("FavoriterUser")
+  favoritedBy          Favorite[]    @relation("FavoritedUser")
+  blockedUsers         Block[]       @relation("Blocker")
+  blockedBy            Block[]       @relation("Blocked")
+  reportsCreated       Report[]      @relation("Reporter")
+  reportsReceived      Report[]      @relation("Reported")
+  stories              Story[]
+  verification         Verification?
+  boosts               Boost[]
+
+  @@map("users")
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Основная информация
+  name       String
+  gender     Gender
+  birthDate  DateTime
+  bio        String?    @db.Text
+  lookingFor LookingFor
+
+  // Локация
+  city      String?
+  country   String?
+  latitude  Float?
+  longitude Float?
+
+  // Интересы и предпочтения
+  interests  String[]
+  occupation String?
+  education  String?
+
+  // Фотографии
+  avatarUrl String?
+  photos    Photo[]
+
+  // Статистика
+  viewsCount Int @default(0)
+  likesCount Int @default(0)
+
+  // Настройки приватности
+  isIncognito Boolean @default(false)
+  showOnline  Boolean @default(true)
+
+  // Дополнительно для премиум
+  isTopProfile Boolean   @default(false)
+  topUntil     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([city, gender])
+  @@index([isTopProfile, createdAt])
+  @@map("profiles")
+}
+
+model Photo {
+  id         String   @id @default(cuid())
+  url        String
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  order      Int      @default(0)
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([profileId])
+  @@map("photos")
+}
+
+model Message {
+  id         String    @id @default(cuid())
+  content    String    @db.Text
+  senderId   String
+  receiverId String
+  sender     User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([senderId, receiverId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  giverId    String
+  receiverId String
+  giver      User     @relation("GivenLikes", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedLikes", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([giverId, receiverId])
+  @@index([receiverId])
+  @@map("likes")
+}
+
+model Gift {
+  id         String   @id @default(cuid())
+  name       String
+  imageUrl   String
+  price      Int // В условных единицах
+  senderId   String
+  receiverId String
+  sender     User     @relation("SentGifts", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedGifts", fields: [receiverId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([receiverId])
+  @@map("gifts")
+}
+
+model Premium {
+  id        String      @id @default(cuid())
+  userId    String      @unique
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      PremiumPlan
+  startDate DateTime    @default(now())
+  endDate   DateTime
+  isActive  Boolean     @default(true)
+  autoRenew Boolean     @default(false)
+  createdAt DateTime    @default(now())
+
+  @@index([endDate])
+  @@map("premium")
+}
+
+model VideoCall {
+  id          String     @id @default(cuid())
+  initiatorId String
+  receiverId  String
+  initiator   User       @relation("InitiatedCalls", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiver    User       @relation("ReceivedCalls", fields: [receiverId], references: [id], onDelete: Cascade)
+  status      CallStatus @default(PENDING)
+  startedAt   DateTime?
+  endedAt     DateTime?
+  duration    Int? // В секундах
+  createdAt   DateTime   @default(now())
+
+  @@index([initiatorId, receiverId])
+  @@map("video_calls")
+}
+
+model Advertisement {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Содержание объявления
+  title       String
+  description String     @db.Text
+  category    AdCategory
+
+  // Платная реклама
+  isPaid   Boolean @default(false)
+  isActive Boolean @default(true)
+
+  // Позиционирование
+  position AdPosition @default(STANDARD)
+  priority Int        @default(0)
+
+  // Срок действия
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+
+  // Статистика
+  viewsCount  Int @default(0)
+  clicksCount Int @default(0)
+
+  // Настройки показа
+  targetGender Gender?
+  targetAgeMin Int?
+  targetAgeMax Int?
+  targetCities String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, position, priority])
+  @@index([endDate])
+  @@map("advertisements")
+}
+
+// Swipe система
+model Swipe {
+  id         String @id @default(cuid())
+  fromUserId String
+  fromUser   User   @relation("SwipeFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId   String
+  toUser     User   @relation("SwipeTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  action  SwipeAction
+  isMatch Boolean     @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromUserId, toUserId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([isMatch])
+  @@map("swipes")
+}
+
+// Просмотры профиля
+model ProfileView {
+  id       String @id @default(cuid())
+  viewerId String
+  viewer   User   @relation("Viewer", fields: [viewerId], references: [id], onDelete: Cascade)
+  viewedId String
+  viewed   User   @relation("Viewed", fields: [viewedId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([viewerId, viewedId, createdAt])
+  @@index([viewedId, createdAt])
+  @@index([viewerId])
+  @@map("profile_views")
+}
+
+// Избранное
+model Favorite {
+  id              String @id @default(cuid())
+  userId          String
+  user            User   @relation("FavoriterUser", fields: [userId], references: [id], onDelete: Cascade)
+  favoritedUserId String
+  favoritedUser   User   @relation("FavoritedUser", fields: [favoritedUserId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, favoritedUserId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+// Блокировка
+model Block {
+  id        String @id @default(cuid())
+  blockerId String
+  blocker   User   @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User   @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  reason    String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+  @@map("blocks")
+}
+
+// Жалобы
+model Report {
+  id         String @id @default(cuid())
+  reporterId String
+  reporter   User   @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedId String
+  reported   User   @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  reason      ReportReason
+  description String?      @db.Text
+  status      String       @default("pending") // pending, reviewed, resolved
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@index([status])
+  @@map("reports")
+}
+
+// Истории
+model Story {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  mediaUrl  String
+  mediaType String // image, video
+  caption   String? @db.Text
+
+  viewsCount Int      @default(0)
+  expiresAt  DateTime // 24 часа от создания
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("stories")
+}
+
+// Верификация
+model Verification {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status      VerificationStatus @default(PENDING)
+  photoUrl    String? // Селфи для верификации
+  documentUrl String? // Документ (если требуется)
+  notes       String?            @db.Text
+
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("verifications")
+}
+
+// Boost профиля
+model Boost {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  duration  Int // минуты
+  startTime DateTime
+  endTime   DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([endTime])
+  @@map("boosts")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum LookingFor {
+  SPONSOR // Ищу спонсора
+  COMPANION // Ищу компаньона/содержанку
+  FRIENDSHIP // Ищу дружбу
+  RELATIONSHIP // Ищу отношения
+}
+
+enum PremiumPlan {
+  BASIC // 1 месяц
+  STANDARD // 3 месяца
+  PREMIUM // 6 месяцев
+  VIP // 1 год
+}
+
+enum CallStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  ENDED
+  MISSED
+}
+
+enum AdCategory {
+  PROFILE_PROMOTION // Продвижение профиля
+  ANNOUNCEMENT // Объявление
+  EVENT // Мероприятие
+  SERVICE // Услуга
+}
+
+enum AdPosition {
+  TOP_BANNER // Верхний баннер
+  SIDEBAR // Боковая панель
+  FEED // В ленте профилей
+  STANDARD // Стандартное размещение
+}
+
+enum SwipeAction {
+  LIKE
+  DISLIKE
+  SUPERLIKE
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ReportReason {
+  FAKE_PROFILE
+  INAPPROPRIATE_CONTENT
+  SPAM
+  HARASSMENT
+  OTHER
+}
