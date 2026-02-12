@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer"
 
 // Настройка транспорта для отправки email
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || "smtp.gmail.com",
   port: parseInt(process.env.EMAIL_PORT || "587"),
   secure: false, // true для 465, false для других портов

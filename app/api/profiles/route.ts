@@ -100,14 +100,18 @@ export async function GET(req: Request) {
     // Фильтр по возрасту
     if (minAge || maxAge) {
       const now = new Date()
+      const birthDateFilter: any = {}
+      
       if (maxAge) {
         const minBirthDate = new Date(now.getFullYear() - parseInt(maxAge), now.getMonth(), now.getDate())
-        where.birthDate = { ...where.birthDate, gte: minBirthDate }
+        birthDateFilter.gte = minBirthDate
       }
       if (minAge) {
         const maxBirthDate = new Date(now.getFullYear() - parseInt(minAge), now.getMonth(), now.getDate())
-        where.birthDate = { ...where.birthDate, lte: maxBirthDate }
+        birthDateFilter.lte = maxBirthDate
       }
+      
+      where.birthDate = birthDateFilter
     }
 
     // Получаем профили с сортировкой (премиум и топ сначала)

@@ -16,7 +16,7 @@ export default function GiftsPage() {
   const { status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const userId = searchParams.get("userId")
+  const userId = searchParams?.get("userId")
   
   const [catalog, setCatalog] = useState<Gift[]>([])
   const [loading, setLoading] = useState(true)

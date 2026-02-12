@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       where: { userId }
     })
 
-    const hasPremium = premium && new Date(premium.expiresAt) > new Date()
+    const hasPremium = premium && premium.isActive && new Date(premium.endDate) > new Date()
 
     if (!hasPremium) {
       return NextResponse.json({ error: "Premium required" }, { status: 403 })

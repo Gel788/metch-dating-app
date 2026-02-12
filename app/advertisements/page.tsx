@@ -6,10 +6,20 @@ import { useRouter } from "next/navigation"
 import Navbar from "@/components/Navbar"
 import Link from "next/link"
 
+interface Advertisement {
+  id: string
+  title: string
+  description: string
+  category: string
+  price: number
+  status: string
+  createdAt: string
+}
+
 export default function AdvertisementsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [myAds, setMyAds] = useState<unknown[]>([])
+  const [myAds, setMyAds] = useState<Advertisement[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,7 +46,7 @@ export default function AdvertisementsPage() {
     try {
       const res = await fetch(`/api/advertisements/${adId}`, { method: "DELETE" })
       if (res.ok) {
-        setMyAds(myAds.filter((ad: { id: string }) => ad.id !== adId))
+        setMyAds(myAds.filter((ad) => ad.id !== adId))
         alert("✅ Удалено")
       }
     } catch (error) {

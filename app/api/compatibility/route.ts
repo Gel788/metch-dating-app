@@ -61,21 +61,27 @@ export async function GET(req: NextRequest) {
     }
 
     // Тип телосложения совпадает (5 баллов)
-    maxScore += 5
-    if (myProfile.bodyType && targetProfile.bodyType && myProfile.bodyType === targetProfile.bodyType) {
-      score += 5
+    if ('bodyType' in myProfile && 'bodyType' in targetProfile) {
+      maxScore += 5
+      if (myProfile.bodyType && targetProfile.bodyType && myProfile.bodyType === targetProfile.bodyType) {
+        score += 5
+      }
     }
 
     // Отношение к курению (5 баллов)
-    maxScore += 5
-    if (myProfile.smoking && targetProfile.smoking && myProfile.smoking === targetProfile.smoking) {
-      score += 5
+    if ('smoking' in myProfile && 'smoking' in targetProfile) {
+      maxScore += 5
+      if (myProfile.smoking && targetProfile.smoking && myProfile.smoking === targetProfile.smoking) {
+        score += 5
+      }
     }
 
     // Дети (5 баллов)
-    maxScore += 5
-    if (myProfile.wantsChildren && targetProfile.wantsChildren && myProfile.wantsChildren === targetProfile.wantsChildren) {
-      score += 5
+    if ('wantsChildren' in myProfile && 'wantsChildren' in targetProfile) {
+      maxScore += 5
+      if (myProfile.wantsChildren && targetProfile.wantsChildren && myProfile.wantsChildren === targetProfile.wantsChildren) {
+        score += 5
+      }
     }
 
     const compatibility = Math.round((score / maxScore) * 100)

@@ -45,14 +45,15 @@ export async function GET(req: NextRequest) {
 
     // Найти случайный профиль
     // Определяем предпочитаемый пол на основе lookingFor
-    let preferredGender: string | undefined = undefined
+    type Gender = "MALE" | "FEMALE" | "OTHER"
+    let preferredGender: Gender | undefined = undefined
     
     if (myProfile?.lookingFor === "SPONSOR") {
       // Ищем спонсора - обычно мужчины
-      preferredGender = "MALE"
+      preferredGender = "MALE" as Gender
     } else if (myProfile?.lookingFor === "COMPANION") {
       // Ищем компаньона - может быть любой пол, но противоположный
-      preferredGender = myProfile.gender === "MALE" ? "FEMALE" : "MALE"
+      preferredGender = (myProfile.gender === "MALE" ? "FEMALE" : "MALE") as Gender
     }
     // Если RELATIONSHIP или другое - показываем всех
 
@@ -62,7 +63,7 @@ export async function GET(req: NextRequest) {
         userId: {
           notIn: [...swipedUserIds, ...blockedUserIds, userId]
         },
-        ...(preferredGender ? { gender: preferredGender } : {})
+        ...(preferredGender ? { gender: preferredGender as any } : {})
       },
       include: {
         user: {

@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
       return null
     })
 
-    const hasPremium = premium && new Date(premium.expiresAt) > new Date()
+    const hasPremium = premium && premium.isActive && new Date(premium.endDate) > new Date()
     console.log("[profile-views] Has premium:", hasPremium)
 
     // Получить просмотры
@@ -58,12 +58,13 @@ export async function GET(req: NextRequest) {
     console.log("[profile-views] Found", views.length, "views")
 
     // Группировать по viewerId (показывать только последний просмотр)
-    const uniqueViews = views.reduce((acc, view) => {
+    type ViewType = typeof views[number]
+    const uniqueViews = views.reduce<ViewType[]>((acc, view) => {
       if (!acc.find(v => v.viewerId === view.viewerId)) {
         acc.push(view)
       }
       return acc
-    }, [] as typeof views)
+    }, [])
 
     console.log("[profile-views] Returning", uniqueViews.length, "unique views")
 

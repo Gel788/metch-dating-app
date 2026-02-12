@@ -18,6 +18,8 @@ export default function ProfileDetailPage() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
 
   const fetchProfile = useCallback(async () => {
+    if (!params?.id) return
+    
     try {
       const res = await fetch(`/api/profiles/${params.id}`)
       const data = await res.json()
@@ -35,13 +37,13 @@ export default function ProfileDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [params.id, session?.user?.id])
+  }, [params?.id, session?.user?.id])
 
   useEffect(() => {
-    if (params.id) {
+    if (params?.id) {
       fetchProfile()
     }
-  }, [params.id, fetchProfile])
+  }, [params?.id, fetchProfile])
 
   const handleLike = async () => {
     if (!session) {
@@ -211,7 +213,7 @@ export default function ProfileDetailPage() {
               {/* Индикаторы фото */}
               {allPhotos.length > 1 && (
                 <div className="absolute top-6 left-6 right-6 flex gap-2">
-                  {allPhotos.map((_, idx) => (
+                  {allPhotos.map((_: any, idx: number) => (
                     <button
                       key={idx}
                       className={`flex-1 h-1 rounded-full transition-all ${

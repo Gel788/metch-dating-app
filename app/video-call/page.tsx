@@ -10,7 +10,7 @@ export default function VideoCallPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const recipientId = searchParams.get("userId")
+  const recipientId = searchParams?.get("userId")
   
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)

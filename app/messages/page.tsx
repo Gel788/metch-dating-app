@@ -8,14 +8,41 @@ import Image from "next/image"
 import { useSocket } from "@/hooks/useSocket"
 import Link from "next/link"
 
+interface Dialogue {
+  userId: string
+  user: {
+    id: string
+    profile?: {
+      name?: string
+      avatarUrl?: string
+    }
+  }
+  lastMessage: {
+    content: string
+  }
+  unreadCount: number
+}
+
+interface Message {
+  id: string
+  content: string
+  createdAt: string
+  sender: {
+    id: string
+  }
+  receiver: {
+    id: string
+  }
+}
+
 export default function MessagesPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const userId = searchParams.get("userId")
+  const userId = searchParams?.get("userId")
   
-  const [dialogues, setDialogues] = useState<unknown[]>([])
-  const [messages, setMessages] = useState<unknown[]>([])
+  const [dialogues, setDialogues] = useState<Dialogue[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [selectedUser, setSelectedUser] = useState<{ id: string; profile?: { name?: string; avatarUrl?: string } } | null>(null)
   const [newMessage, setNewMessage] = useState("")
   const [loading, setLoading] = useState(true)
@@ -76,7 +103,7 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!socket) return
 
-    socket.on("new_message", (message: unknown) => {
+    socket.on("new_message", (message: Message) => {
       setMessages((prev) => [...prev, message])
     })
 
