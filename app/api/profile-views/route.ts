@@ -58,9 +58,8 @@ export async function GET(req: NextRequest) {
     console.log("[profile-views] Found", views.length, "views")
 
     // Группировать по viewerId (показывать только последний просмотр)
-    type ViewType = typeof views[number]
-    const uniqueViews = views.reduce<ViewType[]>((acc, view) => {
-      if (!acc.find(v => v.viewerId === view.viewerId)) {
+    const uniqueViews = views.reduce((acc: any[], view: any) => {
+      if (!acc.find((v: any) => v.viewerId === view.viewerId)) {
         acc.push(view)
       }
       return acc
